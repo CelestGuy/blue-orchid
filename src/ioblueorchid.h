@@ -26,7 +26,7 @@ namespace iomap {
 
     Point *readPoint(char pointString[]);
 
-    Map readMap(const char *&fileName);
+    Map readMap(const char *fileName);
 };
 
 

@@ -125,7 +125,7 @@ Point *iomap::readPoint(char pointString[]) {
     );
 }
 
-Map iomap::readMap(const char *&fileName) {
+Map iomap::readMap(const char *fileName) {
     FILE *file = fopen(fileName, "r");
     string mode;
 
