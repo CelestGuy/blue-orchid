@@ -3,8 +3,7 @@ project(blue_orchid)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(blue_orchid
-        src/main.cpp
+add_library(blue_orchid
         src/blueorchid.cpp
         src/ioblueorchid.cpp
 )

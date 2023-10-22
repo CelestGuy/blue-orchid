@@ -180,11 +180,11 @@ void bocd::Wall::setBPointId(int val) {
     this->bPointId = val;
 }
 
-bool bocd::Wall::isPortal() {
+bool bocd::Wall::isPortal() const {
     return portal;
 }
 
-int bocd::Wall::getLinkedPortalId() {
+int bocd::Wall::getLinkedPortalId() const {
     return linkedPortalId;
 }
 

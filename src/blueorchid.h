@@ -54,11 +54,11 @@ namespace bocd {
 
         [[nodiscard]] int getId() const;
 
-        double getX() const;
+        [[nodiscard]] double getX() const;
 
         void setX(double d);
 
-        double getY() const;
+        [[nodiscard]] double getY() const;
 
         void setY(double d);
 
@@ -70,15 +70,15 @@ namespace bocd {
 
         void setWidth(double d);
 
-        double getHeight() const;
+        [[nodiscard]] double getHeight() const;
 
         void setHeight(double d);
 
-        double getDepth() const;
+        [[nodiscard]] double getDepth() const;
 
         void setDepth(double d);
 
-        bool isMovable() const;
+        [[nodiscard]] bool isMovable() const;
 
         void setMovable(bool val);
 
@@ -133,9 +133,9 @@ namespace bocd {
 
         void setBPointId(int val);
 
-        bool isPortal();
+        [[nodiscard]] bool isPortal() const;
 
-        int getLinkedPortalId();
+        [[nodiscard]] int getLinkedPortalId() const;
     };
 
 /**

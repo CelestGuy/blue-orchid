@@ -1,5 +1,5 @@
 //
-// Created by theom on 22/10/2023.
+// Created by Théo Duval on 22/10/2023.
 //
 
 #include "ioblueorchid.h"
@@ -9,7 +9,7 @@
 using namespace bocd;
 using namespace iomap;
 
-void iomap::writeMap(Map map, const char *&outputFile) {
+void iomap::writeMap(Map map, const char *outputFile) {
     FILE *file = fopen(outputFile, "rw");
 
     fprintf(file, "[POINTS]\n");
@@ -55,7 +55,7 @@ void iomap::writeMap(Map map, const char *&outputFile) {
     auto adjacencyList = map.getAdjacencyList();
     unordered_map<int, int>::iterator alitr;
     for (alitr = adjacencyList.begin(); alitr != adjacencyList.end(); alitr++) {
-        fprintf(file, "%d;%d", alitr->first, alitr->second);
+        fprintf(file, "%d %d\n", alitr->first, alitr->second);
     }
 
     fprintf(file, "\n\n[SPAWN]\n");
@@ -64,65 +64,87 @@ void iomap::writeMap(Map map, const char *&outputFile) {
     fclose(file);
 }
 
-Object *iomap::readObject(char* line) {
+Object *iomap::readObject(const char *line) {
     int id;
     double x, y, z, width, height, depth;
     bool movable;
 
-    sscanf(line, "%d %lf %lf %lf %lf %lf %lf %c", &id, &x, &y, &z, &width, &height, &depth, &movable);
+    int t = sscanf(line, "%d %lf %lf %lf %lf %lf %lf %c", &id, &x, &y, &z, &width, &height, &depth, &movable);
 
-    return new Object(id, x, y, z, width, height, depth, movable);
+    if (t == 8) {
+        return new Object(id, x, y, z, width, height, depth, movable);
+    } else {
+        return nullptr;
+    }
 }
 
-double * iomap::readSpawnPos(char *line) {
+double *iomap::readSpawnPos(const char *line) {
     double x, y;
-    sscanf(line, "%lf %lf", &x, &y);
-    double e[] {
-            x, y
-    };
+    int t = sscanf(line, "%lf %lf", &x, &y);
 
-    return e;
+    if (t == 2) {
+        auto *e = (double *) malloc(sizeof(double) * 2);
+        e[0] = x;
+        e[1] = y;
+
+        return e;
+    } else {
+        return nullptr;
+    }
 }
 
-unordered_map<int, int> *iomap::readWallSectorAdjacencyList(string listString) {
-    unordered_map<int, int> *adjacencyList = new unordered_map<int, int>();
+pair<int, int> *iomap::readWallSectorAdjacency(const char *listString) {
+    int wallId = -1;
+    int sectorId = -1;
+    if (sscanf(listString, "%d %d", &wallId, &sectorId) == 2) {
+        auto *p = new pair<int, int>();
+        p->first = wallId;
+        p->second = sectorId;
+        return p;
+    }
 
-    return adjacencyList;
+    return nullptr;
 }
 
-Sector *iomap::readSector(char *sectorString) {
+Sector *iomap::readSector(const char *sectorString) {
     int id;
     double ceilHeight, floorHeight;
 
-    sscanf(sectorString, "%d %lf %lf", &id, &ceilHeight, &floorHeight);
+    int t = sscanf(sectorString, "%d %lf %lf", &id, &ceilHeight, &floorHeight);
 
-    return new
-            Sector(id, ceilHeight, floorHeight
-    );
+    if (t == 3) {
+        return new Sector(id, ceilHeight, floorHeight);
+    }
+
+    return nullptr;
 }
 
-Wall *iomap::readWall(char *wallString) {
+Wall *iomap::readWall(const char *wallString) {
     int id, aId, bId;
     int linkedPortalId = -1;
 
-    sscanf(wallString, "%d %d %d %d", &id, &aId, &bId, &linkedPortalId);
+    int t = sscanf(wallString, "%d %d %d %d", &id, &aId, &bId, &linkedPortalId);
 
-    if (linkedPortalId >= 0) {
+    if (t == 4) {
         return new Wall(id, aId, bId, linkedPortalId);
+    } else if (t == 3) {
+        return new Wall(id, aId, bId);
     }
 
-    return new Wall(id, aId, bId);
+    return nullptr;
 }
 
-Point *iomap::readPoint(char pointString[]) {
+Point *iomap::readPoint(const char *pointString) {
     int id;
     double x, y;
 
-    sscanf(pointString, "%d %lf %lf", &id, &x, &y);
+    int t = sscanf(pointString, "%d %lf %lf", &id, &x, &y);
 
-    return new
-            Point(id, x, y
-    );
+    if (t == 3) {
+        return new Point(id, x, y);
+    }
+
+    return nullptr;
 }
 
 Map iomap::readMap(const char *fileName) {
@@ -134,13 +156,13 @@ Map iomap::readMap(const char *fileName) {
     int c;
     do {
         int pos = 0;
-        char buffer[32];
+        char buffer[16];
         // gets line
         do {
             c = fgetc(file);
             if (c != EOF && c != '\n')
                 buffer[pos++] = (char) c;
-        } while (c != EOF && c != '\n' && pos < 31);
+        } while (c != EOF && c != '\n' && pos < 15);
 
         buffer[pos] = '\0';
         char *line = const_cast<char *>(buffer);
@@ -149,24 +171,39 @@ Map iomap::readMap(const char *fileName) {
         if (strline.find('[') == 0 && strline.find(']') != string::npos) {
             mode = strline.substr(1, strline.find(']') - 1);
         } else {
-            if (mode == "SECTORS") {
-                map->addSector(*readSector(line));
-            } else if (mode == "WALLS") {
-                map->addWall(*readWall(line));
-            } else if (mode == "POINTS") {
-                map->addPoint(*readPoint(line));
-            } else if (mode == "MAP_OBJECT") {
-                map->addObject(*readObject(line));
-            } else if (mode == "ADJACENCY_LIST") {
-                unordered_map<int, int> *adjacencyList = readWallSectorAdjacencyList(line);
-                unordered_map<int, int>::iterator itr;
-                for (itr = adjacencyList->begin(); itr != adjacencyList->end(); itr++) {
-                    map->addWallInSector(itr->first, itr->second);
+            if (!*line || *line == '#') {
+                continue;
+            } else if (mode == "SECTORS") {
+                Sector *s = readSector(line);
+                if (s != nullptr) {
+                    map->addSector(*s);
                 }
-            } else if (mode == "spawn") {
+            } else if (mode == "WALLS") {
+                Wall *w = readWall(line);
+                if (w != nullptr) {
+                    map->addWall(*w);
+                }
+            } else if (mode == "POINTS") {
+                Point *p = readPoint(line);
+                if (p != nullptr) {
+                    map->addPoint(*p);
+                }
+            } else if (mode == "MAP_OBJECT") {
+                Object *o = readObject(line);
+                if (o != nullptr) {
+                    map->addObject(*o);
+                }
+            } else if (mode == "ADJACENCY_LIST") {
+                pair<int, int> *adjacency = readWallSectorAdjacency(line);
+                if (adjacency != nullptr) {
+                    map->addWallInSector(adjacency->first, adjacency->second);
+                }
+            } else if (mode == "SPAWN") {
                 double *p = readSpawnPos(line);
-                map->setSpawnX(p[0]);
-                map->setSpawnY(p[1]);
+                if (p != nullptr) {
+                    map->setSpawnX(p[0]);
+                    map->setSpawnY(p[1]);
+                }
             }
         }
     } while (c != EOF);

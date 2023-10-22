@@ -1,5 +1,5 @@
 //
-// Created by theom on 22/10/2023.
+// Created by Théo Duval on 22/10/2023.
 //
 
 #ifndef BLUE_ORCHID_IOBLUEORCHID_H
@@ -12,21 +12,21 @@ using namespace bocd;
 using namespace std;
 
 namespace iomap {
-    void writeMap(Map map, const char *&outputFile);
+    void writeMap(Map map, const char *outputFile);
 
-    Object *readObject(char* line);
+    Object *readObject(const char *line);
 
-    double * readSpawnPos(char *line);
+    double *readSpawnPos(const char *line);
 
-    unordered_map<int, int> *readWallSectorAdjacencyList(string listString);
+    Sector *readSector(const char *sectorString);
 
-    Sector *readSector(char *sectorString);
+    Wall *readWall(const char *wallString);
 
-    Wall *readWall(char *wallString);
-
-    Point *readPoint(char pointString[]);
+    Point *readPoint(const char pointString[]);
 
     Map readMap(const char *fileName);
+
+    pair<int, int> *readWallSectorAdjacency(const char *listString);
 };
 
 
