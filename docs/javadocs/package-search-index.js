@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"dev.theoduval.orchid"},{"l":"dev.theoduval.orchid.data"},{"l":"dev.theoduval.orchid.exceptions"},{"l":"dev.theoduval.orchid.io"}];updateSearchResults();
