@@ -156,17 +156,19 @@ Map iomap::readMap(const char *fileName) {
     int c;
     do {
         int pos = 0;
-        char buffer[16];
+        char buffer[32];
         // gets line
         do {
             c = fgetc(file);
             if (c != EOF && c != '\n')
                 buffer[pos++] = (char) c;
-        } while (c != EOF && c != '\n' && pos < 15);
+        } while (c != EOF && c != '\n' && pos < 32);
 
         buffer[pos] = '\0';
         char *line = const_cast<char *>(buffer);
         string strline = (string) line;
+
+        int lineI = 1;
 
         if (strline.find('[') == 0 && strline.find(']') != string::npos) {
             mode = strline.substr(1, strline.find(']') - 1);
@@ -177,35 +179,49 @@ Map iomap::readMap(const char *fileName) {
                 Sector *s = readSector(line);
                 if (s != nullptr) {
                     map->addSector(*s);
+                } else {
+                    fprintf(stderr, "Can't read sector at line %d\n", lineI);
                 }
             } else if (mode == "WALLS") {
                 Wall *w = readWall(line);
                 if (w != nullptr) {
                     map->addWall(*w);
+                } else {
+                    fprintf(stderr, "Can't read wall at line %d\n", lineI);
                 }
             } else if (mode == "POINTS") {
                 Point *p = readPoint(line);
                 if (p != nullptr) {
                     map->addPoint(*p);
+                } else {
+                    fprintf(stderr, "Can't read point at line %d\n", lineI);
                 }
             } else if (mode == "MAP_OBJECT") {
                 Object *o = readObject(line);
                 if (o != nullptr) {
                     map->addObject(*o);
+                } else {
+                    fprintf(stderr, "Can't read object at line %d\n", lineI);
                 }
             } else if (mode == "ADJACENCY_LIST") {
                 pair<int, int> *adjacency = readWallSectorAdjacency(line);
                 if (adjacency != nullptr) {
                     map->addWallInSector(adjacency->first, adjacency->second);
+                } else {
+                    fprintf(stderr, "Can't read adjacency at line %d\n", lineI);
                 }
             } else if (mode == "SPAWN") {
                 double *p = readSpawnPos(line);
                 if (p != nullptr) {
                     map->setSpawnX(p[0]);
                     map->setSpawnY(p[1]);
+                } else {
+                    fprintf(stderr, "Can't read spawn point at line %d\n", lineI);
                 }
             }
         }
+
+        lineI++;
     } while (c != EOF);
 
     return *map;
