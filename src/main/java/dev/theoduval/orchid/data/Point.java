@@ -2,10 +2,10 @@ package dev.theoduval.orchid.data;
 
 public class Point {
     private final int id;
-    private double x;
-    private double y;
+    private int x;
+    private int y;
 
-    public Point(int id, double x, double y) {
+    public Point(int id, int x, int y) {
         this.id = id;
         this.x = x;
         this.y = y;
@@ -15,26 +15,24 @@ public class Point {
         return id;
     }
 
-    public double getX() {
+    public int getX() {
         return x;
     }
 
-    public void setX(double x) {
+    public void setX(int x) {
         this.x = x;
     }
 
-    public double getY() {
+    public int getY() {
         return y;
     }
 
-    public void setY(double y) {
+    public void setY(int y) {
         this.y = y;
     }
 
     @Override
     public String toString() {
-        return id + " " +
-                x + " " +
-                y;
+        return id + " " + x + " " + y;
     }
 }

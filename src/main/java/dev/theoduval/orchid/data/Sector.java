@@ -2,10 +2,10 @@ package dev.theoduval.orchid.data;
 
 public class Sector {
     private final int id;
-    private double ceilHeight;
-    private double floorHeight;
+    private int ceilHeight;
+    private int floorHeight;
 
-    public Sector(int id, double ceilHeight, double floorHeight) {
+    public Sector(int id, int ceilHeight, int floorHeight) {
         this.id = id;
         this.ceilHeight = ceilHeight;
         this.floorHeight = floorHeight;
@@ -15,19 +15,19 @@ public class Sector {
         return id;
     }
 
-    public double getCeilHeight() {
+    public int getCeilHeight() {
         return ceilHeight;
     }
 
-    public void setCeilHeight(double ceilHeight) {
+    public void setCeilHeight(int ceilHeight) {
         this.ceilHeight = ceilHeight;
     }
 
-    public double getFloorHeight() {
+    public int getFloorHeight() {
         return floorHeight;
     }
 
-    public void setFloorHeight(double floorHeight) {
+    public void setFloorHeight(int floorHeight) {
         this.floorHeight = floorHeight;
     }
 

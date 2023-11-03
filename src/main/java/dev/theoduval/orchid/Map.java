@@ -4,11 +4,10 @@ import dev.theoduval.orchid.data.MapObject;
 import dev.theoduval.orchid.data.Point;
 import dev.theoduval.orchid.data.Sector;
 import dev.theoduval.orchid.data.Wall;
-import dev.theoduval.orchid.exceptions.IDNotSet;
+import dev.theoduval.orchid.data.Metadata;
 import dev.theoduval.orchid.exceptions.IllegalIdException;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -24,24 +23,29 @@ public final class Map {
     /**
      * This list of the size of the number of walls contains the id of the sector to which the wall is associated
      */
-    private final HashMap<Integer, Integer> adjacencyList;
+    private final int[] adjacencyList;
 
-    private final HashMap<Integer, MapObject> mapObjects;
-    private final HashMap<Integer, Sector> sectors;
-    private final HashMap<Integer, Point> points;
-    private final HashMap<Integer, Wall> walls;
+    private final MapObject[] mapObjects;
+    private final Sector[] sectors;
+    private final Point[] points;
+    private final Wall[] walls;
+    private final Metadata[] metadata;
 
-    private double spawnX;
-    private double spawnY;
+    public Map(
+            int[] adjacencyList,
+            MapObject[] mapObjects,
+            Sector[] sectors,
+            Point[] points,
+            Wall[] walls,
+            Metadata[] metadata
+    ) {
+        this.adjacencyList = adjacencyList;
+        this.mapObjects = mapObjects;
+        this.sectors = sectors;
+        this.points = points;
+        this.walls = walls;
+        this.metadata = metadata;
 
-    public Map() {
-        adjacencyList = new HashMap<>();
-        mapObjects = new HashMap<>();
-        sectors = new HashMap<>();
-        points = new HashMap<>();
-        walls = new HashMap<>();
-        spawnX = 0D;
-        spawnY = 0D;
     }
 
     /**
@@ -52,13 +56,13 @@ public final class Map {
      */
     @NotNull
     public Sector getSector(int sectorId) {
-        if (sectors.containsKey(sectorId)) {
-            return sectors.get(sectorId);
+        if (sectorId >= 0 && sectorId < sectors.length) {
+            return sectors[sectorId];
         } else if (sectorId < 0) {
             throw new IllegalIdException(sectorId, IllegalIdException.negativeID);
         }
 
-        throw new IllegalIdException(sectorId, IllegalIdException.nonExistantID);
+        throw new IllegalIdException(sectorId, IllegalIdException.nonExistentID);
     }
 
     /**
@@ -69,13 +73,13 @@ public final class Map {
      */
     @NotNull
     public Wall getWall(int wallId) {
-        if (walls.containsKey(wallId)) {
-            return walls.get(wallId);
+        if (wallId >= 0 && wallId < walls.length) {
+            return walls[wallId];
         } else if (wallId < 0) {
-            throw new IllegalIdException(wallId, IllegalIdException.nonExistantID);
+            throw new IllegalIdException(wallId, IllegalIdException.nonExistentID);
         }
 
-        throw new IllegalIdException(wallId, IllegalIdException.nonExistantID);
+        throw new IllegalIdException(wallId, IllegalIdException.nonExistentID);
     }
 
     /**
@@ -86,13 +90,13 @@ public final class Map {
      */
     @NotNull
     public Point getPoint(int pointId) {
-        if (points.containsKey(pointId)) {
-            return points.get(pointId);
+        if (pointId >= 0 && pointId < points.length) {
+            return points[pointId];
         } else if (pointId < 0) {
-            throw new IllegalIdException(pointId, IllegalIdException.nonExistantID);
+            throw new IllegalIdException(pointId, IllegalIdException.nonExistentID);
         }
 
-        throw new IllegalIdException(pointId, IllegalIdException.nonExistantID);
+        throw new IllegalIdException(pointId, IllegalIdException.nonExistentID);
     }
 
     /**
@@ -103,13 +107,13 @@ public final class Map {
      */
     @NotNull
     public MapObject getMapObject(int mapObjectId) {
-        if (mapObjects.containsKey(mapObjectId)) {
-            return mapObjects.get(mapObjectId);
+        if (mapObjectId >= 0 && mapObjectId < mapObjects.length) {
+            return mapObjects[mapObjectId];
         } else if (mapObjectId < 0) {
-            throw new IllegalIdException(mapObjectId, IllegalIdException.nonExistantID);
+            throw new IllegalIdException(mapObjectId, IllegalIdException.nonExistentID);
         }
 
-        throw new IllegalIdException(mapObjectId, IllegalIdException.nonExistantID);
+        throw new IllegalIdException(mapObjectId, IllegalIdException.nonExistentID);
     }
 
     /**
@@ -117,24 +121,23 @@ public final class Map {
      * @param wallId The ID of the wall
      * @return the Sector which contains the wall
      *
-     * @throws IDNotSet if the Wall isn't in a sector
      * @throws IllegalIdException if the ID doesn't exist
      */
     @NotNull
-    public Sector getWallSector(int wallId) throws IDNotSet {
-        if (adjacencyList.containsKey(wallId)) {
-            int sectorId = adjacencyList.get(wallId);
+    public Sector getWallSector(int wallId) {
+        if (wallId >= 0 && wallId < adjacencyList.length) {
+            int sectorId = adjacencyList[wallId];
 
             if (sectorId < 0) {
-                throw new IDNotSet();
-            } else if (sectors.containsKey(sectorId)) {
-                return sectors.get(sectorId);
+                throw new IllegalIdException(wallId, IllegalIdException.notSetID);
             }
+
+            return getSector(sectorId);
         } else if (wallId < 0) {
-            throw new IllegalIdException(wallId, IllegalIdException.nonExistantID);
+            throw new IllegalIdException(wallId, IllegalIdException.nonExistentID);
         }
 
-        throw new IllegalIdException(wallId, IllegalIdException.nonExistantID);
+        throw new IllegalIdException(wallId, IllegalIdException.nonExistentID);
     }
 
     /**
@@ -142,117 +145,59 @@ public final class Map {
      *
      * @param sectorId the sector ID to check
      * @return The set of Walls in the given sector
-     * @throws IDNotSet if the sector doesn't have wall in it
      */
     @NotNull
-    public HashSet<Wall> getWallsInSector(int sectorId) throws IDNotSet {
-        if (sectorId < 0) {
-            throw new IllegalIdException(sectorId, IllegalIdException.nonExistantID);
-        } else if (!sectors.containsKey(sectorId)) {
-            throw new IllegalIdException(sectorId, IllegalIdException.nonExistantID);
-        } else if (adjacencyList.containsValue(sectorId)) {
-            HashSet<Wall> walls = new HashSet<>();
+    public Wall[] getWallsInSector(int sectorId) {
+        Sector sector = getSector(sectorId);
 
-            for (int key : adjacencyList.keySet()) {
-                int value = adjacencyList.get(key);
-                if (value == sectorId) {
-                    walls.add(this.walls.get(key));
-                }
+        HashSet<Wall> walls = new HashSet<>();
+
+        for (int i = 0; i < adjacencyList.length; i++) {
+            int value = adjacencyList[i];
+            if (value == sector.getId()) {
+                walls.add(this.walls[i]);
             }
-
-            return walls;
-        } else {
-            throw new IDNotSet();
         }
-    }
 
-    /**
-     * Add a wall in a sector
-     * @param wallId the wall ID to add
-     * @param sectorId the sector ID to add the wall in
-     */
-    public void addWallInSector(int wallId, int sectorId) {
-        adjacencyList.put(wallId, sectorId);
-    }
-
-    /**
-     * Removes the given wall from his sector.
-     * @param wallId
-     */
-    public void removeWallFromSector(int wallId) {
-        adjacencyList.remove(wallId);
-    }
-
-    public double getSpawnX() {
-        return spawnX;
-    }
-
-    public void setSpawnX(double spawnX) {
-        this.spawnX = spawnX;
-    }
-
-    public double getSpawnY() {
-        return spawnY;
-    }
-
-    public void setSpawnY(double spawnY) {
-        this.spawnY = spawnY;
+        return walls.toArray(new Wall[0]);
     }
 
     @NotNull
-    public HashSet<Sector> getSectors() {
-        return new HashSet<>(sectors.values());
+    public Sector[] getSectors() {
+        return sectors.clone();
     }
 
     @NotNull
-    public HashSet<MapObject> getMapObjects() {
-        return new HashSet<>(mapObjects.values());
+    public MapObject[] getMapObjects() {
+        return mapObjects.clone();
     }
 
     @NotNull
-    public HashSet<Point> getPoints() {
-        return new HashSet<>(points.values());
+    public Point[] getPoints() {
+        return points.clone();
     }
 
     @NotNull
-    public HashSet<Wall> getWalls() {
-        return new HashSet<>(walls.values());
+    public Wall[] getWalls() {
+        return walls.clone();
     }
 
     @NotNull
-    public HashMap<Integer, Integer> getAdjacencyList() {
-        return new HashMap<>(adjacencyList);
+    public int[] getAdjacencyList() {
+        return adjacencyList.clone();
     }
 
-    public void addSector(@NotNull Sector sector) {
-        sectors.put(sector.getId(), sector);
+    public Metadata[] getMetadata() {
+        return metadata;
     }
 
-    public void removeSector(@NotNull Sector sector) {
-        sectors.remove(sector.getId());
-    }
+    public Metadata getMetadata(String value) {
+        for (Metadata data : metadata) {
+            if (data.key().equals(value)) {
+                return data;
+            }
+        }
 
-    public void addMapObject(@NotNull MapObject mapObject) {
-        mapObjects.put(mapObject.getId(), mapObject);
-    }
-
-    public void removeMapObject(@NotNull MapObject mapObject) {
-        mapObjects.remove(mapObject.getId());
-    }
-
-    public void addWall(@NotNull Wall wall) {
-        walls.put(wall.getId(), wall);
-    }
-
-    public void removeWall(@NotNull Wall wall) {
-        walls.remove(wall.getId());
-    }
-
-    public void addPoint(@NotNull Point point) {
-        points.put(point.getId(), point);
-    }
-
-    public void removePoint(@NotNull Point point) {
-        points.remove(point.getId());
+        return null;
     }
 }
